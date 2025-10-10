@@ -190,7 +190,7 @@ export default function VoiceRecognizer() {
               </div>
             </div>
 
-            <div className="rounded-lg border p-4">
+            {/* <div className="rounded-lg border p-4">
               <p className="font-medium">English letters</p>
               <p className="text-xs text-muted-foreground mt-1">
                 Romanized output. For best results, use Punjabi (pa-IN).
@@ -206,7 +206,7 @@ export default function VoiceRecognizer() {
                   <span className="text-muted-foreground">English letters will appear here…</span>
                 )}
               </div>
-            </div>
+            </div> */}
           </>
         ) : (
           <div className="rounded-lg border p-4 md:col-span-2">

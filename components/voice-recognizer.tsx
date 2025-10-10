@@ -125,12 +125,12 @@ export default function VoiceRecognizer() {
           </select>
         </div>
 
-        <div className="flex items-center gap-2">
+        {/* <div className="flex items-center gap-2">
           <Switch id="guided" checked={guided} onCheckedChange={setGuided} />
           <label htmlFor="guided" className="text-sm">
             Guided lyrics Matching
           </label>
-        </div>
+        </div> */}
 
         <div className="ml-auto flex items-center gap-2">
           {!listening ? (

@@ -11,12 +11,13 @@ declare global {
   }
 }
 
-type LangKey = "en" | "hi" | "pa"
+type LangKey = "en" | "hi" | "pa" | "mr"
 
 const LANG_MAP: Record<LangKey, { label: string; code: string; hint?: string }> = {
   en: { label: "English", code: "en-US" },
   hi: { label: "Hindi", code: "hi-IN" },
   pa: { label: "Punjabi", code: "pa-IN", hint: "Punjabi availability may vary by device." },
+  mr: { label: "Marathi", code: "mr-IN", hint: "Marathi availability may vary by device." }
 }
 
 export default function SpeechTranscriber() {

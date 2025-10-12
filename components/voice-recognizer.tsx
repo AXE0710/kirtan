@@ -83,19 +83,6 @@ export default function VoiceRecognizer() {
     return findBestMatch(HINDI_SONG, snippet, normalizeHindi)
   }, [guided, isHindi, snippet])
 
-  if (!supported) {
-    return (
-      <Card className="border-destructive/50">
-        <CardContent className="p-6">
-          <p className="text-sm">
-            Your browser does not support the Web Speech API for speech recognition. Please try Chrome on desktop or
-            Android. iOS Safari does not currently support this feature.
-          </p>
-        </CardContent>
-      </Card>
-    )
-  }
-
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col md:flex-row items-start md:items-center gap-4">
@@ -139,6 +126,7 @@ export default function VoiceRecognizer() {
                 start()
                 startMic()
               }}
+            disabled={!supported}
               aria-label="Start listening"
             >
               Start
@@ -168,6 +156,16 @@ export default function VoiceRecognizer() {
           </Button>
         </div>
       </div>
+
+      {!supported ? (
+        <div className="rounded-md border border-destructive/40 bg-destructive/5 p-3 text-sm">
+          <p className="font-semibold">Speech Recognition Not Supported</p>
+          <p className="mt-1">
+            Your browser does not support the Web Speech API. For the best experience, please use Google Chrome on a
+            desktop or Android device. This feature is not available on iOS (iPhone/iPad).
+          </p>
+        </div>
+      ) : null}
 
       <div className="grid gap-4 md:grid-cols-2">
         {isPunjabi ? (
@@ -338,9 +336,6 @@ export default function VoiceRecognizer() {
         </div>
       </div>
 
-      <div className="flex items-center justify-center mt-4">
-        <p className="text-sm">Mic Level: {micLevel.toFixed(2)}</p>
-      </div>
     </div>
   )
 }

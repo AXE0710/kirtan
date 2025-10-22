@@ -94,75 +94,12 @@ export default function SpeechTranscriber() {
     } catch {}
   }, [transcript, interim])
 
-  const initRecognition = React.useCallback(() => {
-    const SR = window.SpeechRecognition || window.webkitSpeechRecognition
-    const recognition = new SR()
-    recognition.continuous = true
-    recognition.interimResults = true
-    recognition.maxAlternatives = 1
-    recognition.lang = LANG_MAP[lang]?.code ?? "en-US"
-    
-    // Request audio constraints for better quality
-    recognition.audio = {
-      noiseSuppression: true,
-      echoCancellation: true,
-      autoGainControl: true,
-    }
-
-    recognition.onstart = () => {
-      // console.log("[v0] recognition started")
-    }
-
-    recognition.onresult = (event: any) => {
-      let interimChunk = ""
-      let finalChunk = ""
-      for (let i = event.resultIndex; i < event.results.length; i++) {
-        const res = event.results[i]
-        const text = (res[0]?.transcript || "") + " "
-        if (res.isFinal) finalChunk += text
-        else interimChunk += text
-      }
-      if (finalChunk.trim()) {
-        setTranscript((prev) => (prev + finalChunk).replace(/\s+/g, " "))
-      }
-      setInterim(interimChunk)
-    }
-
-    recognition.onerror = (event: any) => {
-      // console.log("[v0] recognition error:", event?.error)
-      // On a "no-speech" or "network" error, try a restart.
-      // This is a common occurrence on mobile devices and during pauses in speech.
-      if (event.error === "no-speech" || event.error === "network" || event.error === "aborted") {
-        handleRestart()
-      }
-    }
-
-    recognition.onend = () => {
-      // console.log("[v0] recognition ended")
-      // When recognition ends, restart it if we are still in listening mode.
-      // This handles cases where the browser might stop recognition after a period of silence.
-      if (isListening) {
-        handleRestart()
-      }
-    }
-
-    recognitionRef.current = recognition
-  }, [lang, isListening, handleRestart])
-
   const handleStart = () => {
     if (!supported) return
     if (isListening) return
     setTranscript((t) => (t.endsWith(" ") ? t : t + " "))
-    if (!recognitionRef.current) {
-      initRecognition()
-    }
     setInterim("")
     setIsListening(true)
-    setTimeout(() => {
-      try {
-        recognitionRef.current?.start()
-      } catch {}
-    }, 100)
   }
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -180,6 +117,65 @@ export default function SpeechTranscriber() {
       }
     }, 100)
   }, [isListening])
+
+  React.useEffect(() => {
+    if (!isListening) {
+      return
+    }
+
+    if (!recognitionRef.current) {
+      const SR = window.SpeechRecognition || window.webkitSpeechRecognition
+      if (!SR) return
+
+      const recognition = new SR()
+      recognition.continuous = true
+      recognition.interimResults = true
+      recognition.maxAlternatives = 1
+      recognition.lang = LANG_MAP[lang]?.code ?? "en-US"
+
+      recognition.audio = {
+        noiseSuppression: true,
+        echoCancellation: true,
+        autoGainControl: true,
+      }
+
+      recognition.onresult = (event: any) => {
+        let interimChunk = ""
+        let finalChunk = ""
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          const res = event.results[i]
+          const text = (res[0]?.transcript || "") + " "
+          if (res.isFinal) finalChunk += text
+          else interimChunk += text
+        }
+        if (finalChunk.trim()) {
+          setTranscript((prev) => (prev + finalChunk).replace(/\s+/g, " "))
+        }
+        setInterim(interimChunk)
+      }
+
+      recognitionRef.current = recognition
+    }
+
+    const recognition = recognitionRef.current
+    recognition.lang = LANG_MAP[lang]?.code ?? "en-US"
+
+    recognition.onerror = (event: any) => {
+      if (event.error === "no-speech" || event.error === "network" || event.error === "aborted") {
+        handleRestart()
+      }
+    }
+
+    recognition.onend = () => {
+      if (isListening) {
+        handleRestart()
+      }
+    }
+
+    try {
+      recognition.start()
+    } catch {}
+  }, [isListening, lang, handleRestart])
 
   const handleStop = () => {
     setIsListening(false)

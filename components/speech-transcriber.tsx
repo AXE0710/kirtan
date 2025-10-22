@@ -130,44 +130,56 @@ export default function SpeechTranscriber() {
 
     recognition.onerror = (event: any) => {
       // console.log("[v0] recognition error:", event?.error)
-      // Some devices auto-stop; we attempt a soft restart if still listening
-      if (isListening && !restartingRef.current) {
-        restartingRef.current = true
-        setTimeout(() => {
-          try {
-            recognition.start()
-          } catch {}
-          restartingRef.current = false
-        }, 300)
+      // On a "no-speech" or "network" error, try a restart.
+      // This is a common occurrence on mobile devices and during pauses in speech.
+      if (event.error === "no-speech" || event.error === "network" || event.error === "aborted") {
+        handleRestart()
       }
     }
 
     recognition.onend = () => {
       // console.log("[v0] recognition ended")
-      if (isListening && !restartingRef.current) {
-        // Keep it running for continuous dictation
-        try {
-          recognition.start()
-        } catch {}
+      // When recognition ends, restart it if we are still in listening mode.
+      // This handles cases where the browser might stop recognition after a period of silence.
+      if (isListening) {
+        handleRestart()
       }
     }
 
     recognitionRef.current = recognition
-  }, [lang, isListening])
+  }, [lang, isListening, handleRestart])
 
   const handleStart = () => {
     if (!supported) return
     if (isListening) return
     setTranscript((t) => (t.endsWith(" ") ? t : t + " "))
-    setInterim("")
-    initRecognition()
-    try {
-      recognitionRef.current?.start?.()
-      setIsListening(true)
-    } catch {
-      // console.log("[v0] failed to start recognition")
+    if (!recognitionRef.current) {
+      initRecognition()
     }
+    setInterim("")
+    setIsListening(true)
+    setTimeout(() => {
+      try {
+        recognitionRef.current?.start()
+      } catch {}
+    }, 100)
   }
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const handleRestart = React.useCallback(() => {
+    if (!isListening || restartingRef.current) return
+
+    restartingRef.current = true
+    setTimeout(() => {
+      try {
+        recognitionRef.current?.start()
+      } catch (e) {
+        // console.error("Error restarting recognition:", e)
+      } finally {
+        restartingRef.current = false
+      }
+    }, 100)
+  }, [isListening])
 
   const handleStop = () => {
     setIsListening(false)

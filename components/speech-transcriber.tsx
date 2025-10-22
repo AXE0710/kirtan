@@ -101,6 +101,13 @@ export default function SpeechTranscriber() {
     recognition.interimResults = true
     recognition.maxAlternatives = 1
     recognition.lang = LANG_MAP[lang]?.code ?? "en-US"
+    
+    // Request audio constraints for better quality
+    recognition.audio = {
+      noiseSuppression: true,
+      echoCancellation: true,
+      autoGainControl: true,
+    }
 
     recognition.onstart = () => {
       // console.log("[v0] recognition started")
